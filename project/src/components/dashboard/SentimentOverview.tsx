@@ -2,7 +2,7 @@ import React, { useEffect, useMemo, useState } from 'react';
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend } from 'recharts';
 import { format, subDays } from 'date-fns';
 import { ArrowUp, ArrowDown } from 'lucide-react';
-import { fetchCompanies, fetchCompanySentimentSeries } from '../../services/companyService';
+import { fetchTopSentimentCompaniesWithScores, fetchCompanySentimentSeries, fetchCompanySentimentChange } from '../../services/companyService';
 import { Company, SentimentData, TimeRange } from '../../types';
 
 const SentimentOverview: React.FC = () => {
@@ -22,21 +22,25 @@ const SentimentOverview: React.FC = () => {
     }
   };
 
-  const [companies, setCompanies] = useState<Company[]>([]);
+  const [companies, setCompanies] = useState<Array<Company & { sentimentScore: number }>>([]);
   const [seriesByCompanyId, setSeriesByCompanyId] = useState<Record<string, SentimentData[]>>({});
+  const [sentimentChanges, setSentimentChanges] = useState<Record<string, { current: number; previous: number; change: number }>>({});
 
   useEffect(() => {
-    fetchCompanies().then((list) => {
+    // Fetch top 3 companies by sentiment score with their scores
+    fetchTopSentimentCompaniesWithScores(3).then((list) => {
       setCompanies(list);
     });
   }, []);
 
-  // Choose first three companies
-  const selectedCompanies = useMemo(() => companies.slice(0, 3).map(c => c.id), [companies]);
+  // Use all fetched companies (top 3 by sentiment)
+  const selectedCompanies = useMemo(() => companies.map(c => c.id), [companies]);
 
   useEffect(() => {
     const days = getDays(timeRange);
     if (selectedCompanies.length === 0) return;
+    
+    // Fetch sentiment series for all selected companies
     Promise.all(selectedCompanies.map((id) => fetchCompanySentimentSeries(id, days))).then((all) => {
       const next: Record<string, SentimentData[]> = {};
       all.forEach((series, index) => {
@@ -44,16 +48,28 @@ const SentimentOverview: React.FC = () => {
       });
       setSeriesByCompanyId(next);
     });
+
+    // Fetch sentiment changes for all selected companies
+    Promise.all(selectedCompanies.map((id) => fetchCompanySentimentChange(id))).then((all) => {
+      const next: Record<string, { current: number; previous: number; change: number }> = {};
+      all.forEach((change, index) => {
+        next[selectedCompanies[index]] = change;
+      });
+      setSentimentChanges(next);
+    });
   }, [selectedCompanies, timeRange]);
 
   const companyData = selectedCompanies.map(companyId => {
     const company = companies.find(c => c.id === companyId);
     const sentimentData = seriesByCompanyId[companyId] ?? [];
+    const changeData = sentimentChanges[companyId];
+    
     return {
       name: company?.name || '',
       data: sentimentData,
-      currentSentiment: sentimentData[0]?.score || 0,
-      previousSentiment: sentimentData[1]?.score || 0
+      currentSentiment: changeData?.current ?? sentimentData[0]?.score ?? 0,
+      previousSentiment: changeData?.previous ?? sentimentData[1]?.score ?? 0,
+      sentimentScore: company?.sentimentScore ?? 0
     };
   });
 
@@ -69,7 +85,7 @@ const SentimentOverview: React.FC = () => {
     selectedCompanies.forEach((id) => {
       const company = companies.find(c => c.id === id);
       const series = seriesByCompanyId[id] ?? [];
-      const sentiment = series[days - i - 1];
+      const sentiment = series[i]; // Use the correct index for chronological order
       
       if (company && sentiment) {
         dataPoint[company.name] = sentiment.score;
@@ -93,7 +109,7 @@ const SentimentOverview: React.FC = () => {
   return (
     <div className="bg-white dark:bg-neutral-800 rounded-lg shadow-sm p-4 animate-fade-in">
       <div className="flex flex-wrap items-center justify-between mb-4">
-        <h2 className="text-lg font-semibold text-gray-900 dark:text-white">Market Sentiment Overview</h2>
+        <h2 className="text-lg font-semibold text-gray-900 dark:text-white">Sentiment Overview - Top, Medium & Low</h2>
         
         <div className="flex space-x-1 bg-gray-100 dark:bg-neutral-700 rounded-lg p-1">
           {(['1d', '1w', '1m', '3m', '6m', '1y'] as TimeRange[]).map((range) => (
@@ -113,20 +129,33 @@ const SentimentOverview: React.FC = () => {
       </div>
       
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
-        {companyData.map(company => {
+        {companyData.map((company, index) => {
           const change = company.currentSentiment - company.previousSentiment;
           const isPositive = change >= 0;
           
+          // Determine sentiment level based on index
+          const sentimentLevels = ['Top Sentiment', 'Medium Sentiment', 'Low Sentiment'];
+          const levelColors = ['text-green-600', 'text-yellow-600', 'text-red-600'];
+          const bgColors = ['bg-green-50', 'bg-yellow-50', 'bg-red-50'];
+          const darkBgColors = ['dark:bg-green-900/20', 'dark:bg-yellow-900/20', 'dark:bg-red-900/20'];
+          
           return (
-            <div key={company.name} className="bg-gray-50 dark:bg-neutral-700 rounded-lg p-3">
-              <div className="flex justify-between items-center">
-                <span className="text-sm font-medium text-gray-500 dark:text-gray-400">{company.name}</span>
+            <div key={company.name} className={`${bgColors[index]} ${darkBgColors[index]} rounded-lg p-3 border-l-4 ${
+              index === 0 ? 'border-green-500' : index === 1 ? 'border-yellow-500' : 'border-red-500'
+            }`}>
+              <div className="flex justify-between items-center mb-2">
+                <span className={`text-xs font-bold uppercase ${levelColors[index]}`}>
+                  {sentimentLevels[index]}
+                </span>
                 <div className={`flex items-center text-xs font-medium ${
                   isPositive ? 'text-success-500' : 'text-error-500'
                 }`}>
                   {isPositive ? <ArrowUp className="h-3 w-3 mr-1" /> : <ArrowDown className="h-3 w-3 mr-1" />}
                   {Math.abs(change).toFixed(2)}
                 </div>
+              </div>
+              <div className="mb-2">
+                <span className="text-sm font-medium text-gray-900 dark:text-white">{company.name}</span>
               </div>
               <div className="mt-1">
                 <span className="text-2xl font-bold text-gray-900 dark:text-white">
