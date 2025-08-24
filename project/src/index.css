@@ -21,6 +21,7 @@
   background: #94a3b8;
 }
 
+/* Dark mode scrollbar styles */
 .dark .custom-scrollbar::-webkit-scrollbar-track {
   background: #374151;
 }
@@ -30,6 +31,19 @@
 }
 
 .dark .custom-scrollbar::-webkit-scrollbar-thumb:hover {
+  background: #9ca3af;
+}
+
+/* Neutral scrollbar styles for dark theme */
+.custom-scrollbar::-webkit-scrollbar-track {
+  background: #374151;
+}
+
+.custom-scrollbar::-webkit-scrollbar-thumb {
+  background: #6b7280;
+}
+
+.custom-scrollbar::-webkit-scrollbar-thumb:hover {
   background: #9ca3af;
 }
 
@@ -95,6 +109,15 @@
 }
 
 /* Custom scale utilities */
+.hover\:scale-102:hover {
+  transform: scale(1.02);
+}
+
+/* Additional utility classes */
+.hover\:scale-105:hover {
+  transform: scale(1.05);
+}
+
 .hover\:scale-102:hover {
   transform: scale(1.02);
 }

@@ -8,12 +8,12 @@ const Layout: React.FC = () => {
   const { theme } = useTheme();
 
   return (
-    <div className={`min-h-screen flex ${theme === 'dark' ? 'dark' : ''}`}>
+    <div className="min-h-screen flex">
       <Sidebar />
-      <div className="flex-1 flex flex-col">
+      <div className="flex-1 flex flex-col md:ml-72">
         <Header />
-        <main className="flex-1 p-4 md:p-6 bg-gray-50 dark:bg-neutral-900">
-          <div className="container mx-auto">
+        <main className="flex-1 bg-gray-950">
+          <div className="w-full">
             <Outlet />
           </div>
         </main>
