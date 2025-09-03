@@ -2,6 +2,7 @@ import React from 'react';
 import { Routes, Route } from 'react-router-dom';
 import Layout from './components/layout/Layout';
 import Dashboard from './pages/Dashboard';
+import MarketOverview from './pages/MarketOverview';
 import CompanyDetails from './pages/CompanyDetails';
 import SectorAnalysis from './pages/SectorAnalysis';
 import NewsMonitor from './pages/NewsMonitor';
@@ -13,6 +14,7 @@ function App() {
     <Routes>
       <Route path="/" element={<Layout />}>
         <Route index element={<Dashboard />} />
+        <Route path="market-overview" element={<MarketOverview />} />
         <Route path="company/:ticker" element={<CompanyDetails />} />
         <Route path="sector-analysis" element={<SectorAnalysis />} />
         <Route path="news-monitor" element={<NewsMonitor />} />

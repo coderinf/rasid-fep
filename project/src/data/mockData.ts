@@ -47,26 +47,44 @@ export const getCompanySentiment = (companyId: string, days = 30): SentimentData
   const data: SentimentData[] = [];
   const today = new Date();
   
+  // Create different sentiment patterns for different companies
+  const companyPatterns: { [key: string]: { base: number; volatility: number; trend: number } } = {
+    '1': { base: 0.6, volatility: 0.3, trend: 0.02 }, // Aramco - generally positive with upward trend
+    '2': { base: -0.2, volatility: 0.4, trend: -0.01 }, // SEC - slightly negative with downward trend
+    '3': { base: 0.3, volatility: 0.5, trend: 0.005 }, // Al Rajhi - moderate positive
+    '4': { base: 0.7, volatility: 0.2, trend: 0.015 }, // STC - very positive
+    '5': { base: 0.1, volatility: 0.6, trend: -0.02 }, // SABIC - neutral with downward trend
+  };
+  
+  const pattern = companyPatterns[companyId] || { base: 0, volatility: 0.3, trend: 0 };
+  
   for (let i = 0; i < days; i++) {
     const date = new Date();
     date.setDate(today.getDate() - i);
     
-    // Create some patterns in the data
-    let baseScore = Math.sin(i / 10) * 0.5;
+    // Create trend-based sentiment with some volatility
+    let baseScore = pattern.base + (pattern.trend * i);
+    
+    // Add cyclical pattern
+    const cyclicalPattern = Math.sin(i / 7) * 0.2; // Weekly cycles
     
     // Add some randomness
-    const randomFactor = Math.random() * 0.4 - 0.2;
-    let score = baseScore + randomFactor;
+    const randomFactor = (Math.random() - 0.5) * pattern.volatility;
+    let score = baseScore + cyclicalPattern + randomFactor;
     
     // Ensure score is between -1 and 1
     score = Math.max(-1, Math.min(1, score));
+    
+    // Generate volume based on sentiment (higher sentiment = more mentions)
+    const baseVolume = 30 + Math.abs(score) * 50;
+    const volume = Math.floor(baseVolume + Math.random() * 40);
     
     data.push({
       id: `${companyId}-${i}`,
       companyId,
       date: date.toISOString().split('T')[0],
       score,
-      volume: Math.floor(Math.random() * 100) + 20,
+      volume,
     });
   }
   

@@ -115,12 +115,21 @@ const Sidebar: React.FC = () => {
           </h3>
           
           <div className="space-y-2">
-            <button className="w-full flex items-center px-4 py-3 text-sm font-medium rounded-xl transition-all duration-200 text-gray-300 hover:bg-gray-800/50 hover:text-white hover:shadow-md group">
-              <div className="p-2 rounded-lg mr-3 bg-gray-700/50 group-hover:bg-gray-600/50 transition-all duration-200">
+            <NavLink
+              to="/market-overview"
+              className="flex items-center px-4 py-3 text-sm font-medium rounded-xl transition-all duration-200 group text-gray-300 hover:bg-gray-800/50 hover:text-white hover:shadow-md"
+              style={({ isActive }) => ({
+                background: isActive ? 'linear-gradient(to right, #2563eb, #4f46e5)' : 'transparent',
+                color: isActive ? 'white' : '#d1d5db',
+                boxShadow: isActive ? '0 10px 15px -3px rgba(0, 0, 0, 0.1)' : 'none',
+                transform: isActive ? 'scale(1.05)' : 'scale(1)'
+              })}
+            >
+              <div className="p-2 rounded-lg mr-3 transition-all duration-200 bg-gray-700/50 group-hover:bg-gray-600/50">
                 <Globe className="h-5 w-5" />
               </div>
               <span className="font-semibold">Market Overview</span>
-            </button>
+            </NavLink>
             
             <button className="w-full flex items-center px-4 py-3 text-sm font-medium rounded-xl transition-all duration-200 text-gray-300 hover:bg-gray-800/50 hover:text-white hover:shadow-md group">
               <div className="p-2 rounded-lg mr-3 bg-gray-700/50 group-hover:bg-gray-600/50 transition-all duration-200">
