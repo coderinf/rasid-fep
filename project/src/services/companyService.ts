@@ -256,4 +256,48 @@ export async function fetchTopSentimentCompaniesWithScores(limit: number = 3): P
   return companies;
 }
 
+export async function fetchMarketOverviewStats() {
+  // Fetch total stocks
+  const { count: totalStocks } = await supabase
+    .from('companies')
+    .select('*', { count: 'exact', head: true });
+
+  // Fetch active sectors
+  const { count: activeSectors } = await supabase
+    .from('companies')
+    .select('sector', { count: 'exact', head: true });
+
+  // Fetch sentiment stats from sector_sentiment
+  const { data: sectorSentiment } = await supabase
+    .from('sector_sentiment')
+    .select('average_sentiment, change_from_previous')
+    .order('date', { ascending: false })
+    .limit(1)
+    .single();
+
+  // Fetch positive/negative/neutral stocks from company_sentiment
+  const { data: sentimentRows } = await supabase
+    .from('company_sentiment')
+    .select('sentiment_score');
+
+  let positiveStocks = 0, negativeStocks = 0, neutralStocks = 0;
+  if (sentimentRows) {
+    sentimentRows.forEach((row: any) => {
+      if (row.sentiment_score > 0.2) positiveStocks++;
+      else if (row.sentiment_score < -0.2) negativeStocks++;
+      else neutralStocks++;
+    });
+  }
+
+  return {
+    totalStocks: totalStocks || 0,
+    activeSectors: activeSectors || 0,
+    overallSentiment: sectorSentiment?.average_sentiment ?? 0,
+    sentimentChange: sectorSentiment?.change_from_previous ?? 0,
+    positiveStocks,
+    negativeStocks,
+    neutralStocks,
+  };
+}
+
 

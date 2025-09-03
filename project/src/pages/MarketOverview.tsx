@@ -1,12 +1,22 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { BarChart3, TrendingUp, Globe, Users, Zap, Target, Activity, TrendingDown, ArrowLeft } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import StocksToWatch from '../components/dashboard/StocksToWatch';
 import MarketSentimentInsights from '../components/dashboard/MarketSentimentInsights';
+import { fetchMarketOverviewStats } from '../services/companyService';
 
 const MarketOverview: React.FC = () => {
   const currentTime = new Date();
-  
+  const [stats, setStats] = useState<any>(null);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    fetchMarketOverviewStats().then((data) => {
+      setStats(data);
+      setLoading(false);
+    });
+  }, []);
+
   return (
     <div className="space-y-6 p-6 bg-gray-950 min-h-screen">
       {/* Enhanced Header Section */}
@@ -74,21 +84,29 @@ const MarketOverview: React.FC = () => {
             <div className="w-12 h-12 bg-emerald-500/20 rounded-xl flex items-center justify-center">
               <TrendingUp className="h-6 w-6 text-emerald-400" />
             </div>
-            <span className="text-xs font-medium text-emerald-300 bg-emerald-900/50 px-2 py-1 rounded-full">+18%</span>
+            <span className="text-xs font-medium text-emerald-300 bg-emerald-900/50 px-2 py-1 rounded-full">
+              {stats ? `${(stats.sentimentChange * 100).toFixed(1)}%` : '--'}
+            </span>
           </div>
-          <div className="text-3xl font-bold text-white mb-1">156</div>
+          <div className="text-3xl font-bold text-white mb-1">
+            {stats ? stats.totalStocks : '--'}
+          </div>
           <div className="text-sm text-emerald-300">Stocks Monitored</div>
           <div className="mt-3 text-xs text-emerald-400">Active tracking</div>
         </div>
-        
+
         <div className="bg-gradient-to-br from-blue-900/50 to-blue-800/50 rounded-xl p-6 shadow-lg border border-blue-700/30 hover:border-blue-600/50 transition-all duration-300 hover:scale-105">
           <div className="flex items-center justify-between mb-4">
             <div className="w-12 h-12 bg-blue-500/20 rounded-xl flex items-center justify-center">
               <BarChart3 className="h-6 w-6 text-blue-400" />
             </div>
-            <span className="text-xs font-medium text-blue-300 bg-blue-900/50 px-2 py-1 rounded-full">+12%</span>
+            <span className="text-xs font-medium text-blue-300 bg-blue-900/50 px-2 py-1 rounded-full">
+              {stats ? `${stats.activeSectors}` : '--'}
+            </span>
           </div>
-          <div className="text-3xl font-bold text-white mb-1">24</div>
+          <div className="text-3xl font-bold text-white mb-1">
+            {stats ? stats.activeSectors : '--'}
+          </div>
           <div className="text-sm text-blue-300">Active Sectors</div>
           <div className="mt-3 text-xs text-blue-400">Market coverage</div>
         </div>
@@ -98,11 +116,15 @@ const MarketOverview: React.FC = () => {
             <div className="w-12 h-12 bg-purple-500/20 rounded-xl flex items-center justify-center">
               <Target className="h-6 w-6 text-purple-400" />
             </div>
-            <span className="text-xs font-medium text-purple-300 bg-purple-900/50 px-2 py-1 rounded-full">+8%</span>
+            <span className="text-xs font-medium text-purple-300 bg-purple-900/50 px-2 py-1 rounded-full">
+              {stats ? `+${(stats.overallSentiment * 100).toFixed(1)}%` : '--'}
+            </span>
           </div>
-          <div className="text-3xl font-bold text-white mb-1">89</div>
-          <div className="text-sm text-purple-300">Watchlist Items</div>
-          <div className="mt-3 text-xs text-purple-400">Personal alerts</div>
+          <div className="text-3xl font-bold text-white mb-1">
+            {stats ? stats.positiveStocks : '--'}
+          </div>
+          <div className="text-sm text-purple-300">Positive Stocks</div>
+          <div className="mt-3 text-xs text-purple-400">Market sentiment</div>
         </div>
         
         <div className="bg-gradient-to-br from-orange-900/50 to-orange-800/50 rounded-xl p-6 shadow-lg border border-orange-700/30 hover:border-orange-600/50 transition-all duration-300 hover:scale-105">
@@ -112,8 +134,10 @@ const MarketOverview: React.FC = () => {
             </div>
             <span className="text-xs font-medium text-orange-300 bg-orange-900/50 px-2 py-1 rounded-full">Live</span>
           </div>
-          <div className="text-3xl font-bold text-white mb-1">3min</div>
-          <div className="text-sm text-orange-300">Update Frequency</div>
+          <div className="text-3xl font-bold text-white mb-1">
+            {stats ? stats.negativeStocks : '--'}
+          </div>
+          <div className="text-sm text-orange-300">Negative Stocks</div>
           <div className="mt-3 text-xs text-orange-400">Real-time data</div>
         </div>
       </div>
