@@ -12,7 +12,7 @@ const Sidebar: React.FC = () => {
             <Database className="h-6 w-6 text-white" />
           </div>
           <div className="ml-3">
-            <h1 className="text-xl font-bold text-white">Tadāwul Insights</h1>
+            <h1 className="text-xl font-bold text-white">Tadawul Insights</h1>
             <p className="text-xs text-gray-400 font-medium">Professional Trading Platform</p>
           </div>
         </div>
